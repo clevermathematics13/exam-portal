@@ -105,6 +105,54 @@
       /* Reset Button Style */
       .btn-reset { background-color: #d32f2f; color: white; padding: 8px 15px; border: none; border-radius: 20px; font-size: 0.9em; margin-top: 15px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
       .btn-reset:hover { opacity: 1; }
+
+      /* HOW IT WORKS GUIDE */
+      .guide-toggle { 
+        display: inline-block; cursor: pointer; color: #546e7a; font-size: 0.9em; 
+        border: 1px solid #cfd8dc; padding: 6px 14px; border-radius: 20px; 
+        background: #eceff1; transition: all 0.2s; margin-bottom: 10px; user-select: none;
+      }
+      .guide-toggle:hover { background: #cfd8dc; }
+      .guide-panel {
+        display: none; text-align: left; max-width: 650px; margin: 0 auto 20px auto;
+        background: linear-gradient(135deg, #e3f2fd, #f3e5f5); padding: 25px 30px;
+        border-radius: 12px; border: 1px solid #bbdefb; font-size: 0.95em; line-height: 1.6;
+      }
+      .guide-panel.open { display: block; animation: fadeIn 0.3s ease; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+      .guide-panel h3 { margin-top: 0; color: #1a237e; }
+      .guide-step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+      .guide-num { 
+        flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; 
+        background: #0288d1; color: white; font-weight: bold; font-size: 0.85em;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .guide-text { color: #333; }
+      .guide-text strong { color: #0d47a1; }
+
+      /* STEP PROGRESS TRACKER */
+      .step-tracker { 
+        display: flex; justify-content: center; align-items: center; gap: 0; 
+        margin: 15px auto 5px auto; max-width: 500px;
+      }
+      .step-item { 
+        display: flex; flex-direction: column; align-items: center; flex: 1; position: relative;
+      }
+      .step-circle {
+        width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 0.85em; border: 2px solid #ccc; background: #fff; color: #999;
+        transition: all 0.3s; z-index: 2;
+      }
+      .step-circle.active { border-color: #0288d1; background: #0288d1; color: white; box-shadow: 0 2px 8px rgba(2,136,209,0.4); }
+      .step-circle.done { border-color: #4caf50; background: #4caf50; color: white; }
+      .step-label { font-size: 0.7em; color: #999; margin-top: 4px; text-align: center; transition: color 0.3s; }
+      .step-label.active { color: #0288d1; font-weight: bold; }
+      .step-label.done { color: #4caf50; font-weight: bold; }
+      .step-line { 
+        flex: 1; height: 3px; background: #ddd; margin-top: -22px; z-index: 1;
+        transition: background 0.3s;
+      }
+      .step-line.done { background: #4caf50; }
     </style>
   </head>
   <body>
@@ -118,6 +166,49 @@
            onmouseout="this.style.background='#eceff1'">
            📊 View Syllabus Mastery Report
         </a>
+      </div>
+
+      <!-- HOW IT WORKS GUIDE -->
+      <span class="guide-toggle" onclick="toggleGuide()">❓ How does this work?</span>
+      <div id="guide-panel" class="guide-panel">
+        <h3>📋 The Reflection Process</h3>
+        <p style="color:#555; margin-top:0;">This tool helps you reflect on your exam performance in 3 steps:</p>
+        <div class="guide-step">
+          <span class="guide-num">1</span>
+          <span class="guide-text"><strong>Self-Grade</strong> — Select an exam below and enter the marks you think you earned for each question. Be honest!</span>
+        </div>
+        <div class="guide-step">
+          <span class="guide-num">2</span>
+          <span class="guide-text"><strong>Compare</strong> — Once Clev has graded, come back to see a side-by-side comparison. Your <strong>Judgement Disagreement %</strong> shows how closely your self-assessment matched. Update your marks until disagreement is <strong>0%</strong>.</span>
+        </div>
+        <div class="guide-step">
+          <span class="guide-num">3</span>
+          <span class="guide-text"><strong>Upload Corrections</strong> — When disagreement reaches 0%, upload a PDF of your corrected work to complete the process.</span>
+        </div>
+        <p style="color:#888; font-size:0.85em; margin-bottom:0;">💡 <em>Tip: Click the title "CleverReflection" to reset. Use the 📊 button above to see your overall mastery by syllabus topic.</em></p>
+      </div>
+
+      <!-- STEP PROGRESS TRACKER (hidden until an exam is loaded) -->
+      <div id="step-tracker" class="step-tracker" style="display:none;">
+        <div class="step-item">
+          <div id="step-1" class="step-circle">1</div>
+          <div id="step-1-label" class="step-label">Self-Grade</div>
+        </div>
+        <div class="step-line" id="step-line-1"></div>
+        <div class="step-item">
+          <div id="step-2" class="step-circle">2</div>
+          <div id="step-2-label" class="step-label">Compare</div>
+        </div>
+        <div class="step-line" id="step-line-2"></div>
+        <div class="step-item">
+          <div id="step-3" class="step-circle">3</div>
+          <div id="step-3-label" class="step-label">Upload</div>
+        </div>
+        <div class="step-line" id="step-line-3"></div>
+        <div class="step-item">
+          <div id="step-4" class="step-circle">✓</div>
+          <div id="step-4-label" class="step-label">Done</div>
+        </div>
       </div>
 
       <div class="controls-row">
@@ -210,7 +301,7 @@
           <button onclick="startEditing()" class="btn-edit">✏️ Edit My Marks</button>
       </div>
 
-      <div id="error-box" style="color:red; display:none; margin-top:20px;"></div>
+      <div id="error-box" style="display:none; margin-top:20px; background:#fff3e0; color:#e65100; padding:20px; border-radius:8px; border:1px solid #ffcc80;"></div>
     </div>
 
     <script>
@@ -222,6 +313,32 @@
         localStorage.removeItem('savedExamId');
         localStorage.removeItem('savedStudentEmail');
         window.location.reload();
+      }
+
+      function toggleGuide() {
+        var panel = document.getElementById('guide-panel');
+        panel.classList.toggle('open');
+      }
+
+      function updateStepTracker(step) {
+        // step: 0=hidden, 1=self-grade, 2=pending/compare, 3=upload, 4=done
+        // For teacher views, hide the tracker
+        var tracker = document.getElementById('step-tracker');
+        if (step <= 0) { tracker.style.display = 'none'; return; }
+        tracker.style.display = 'flex';
+
+        for (var i = 1; i <= 4; i++) {
+          var circle = document.getElementById('step-' + i);
+          var label = document.getElementById('step-' + i + '-label');
+          circle.className = 'step-circle';
+          label.className = 'step-label';
+          if (i < step) { circle.classList.add('done'); label.classList.add('done'); }
+          else if (i === step) { circle.classList.add('active'); label.classList.add('active'); }
+        }
+        for (var j = 1; j <= 3; j++) {
+          var line = document.getElementById('step-line-' + j);
+          line.className = (j < step) ? 'step-line done' : 'step-line';
+        }
       }
 
       function updateFileName() {
@@ -458,8 +575,10 @@
         }
 
         if (response.status === "teacher_view") {
+          updateStepTracker(0);
           renderTeacherDashboard(response);
         } else if (response.status === "no_submission_teacher_view") {
+           updateStepTracker(0);
            document.getElementById('teacher-status-box').style.display = 'block';
            var sel = document.getElementById('student-selector');
            if (sel.selectedIndex > -1) {
@@ -468,14 +587,21 @@
               document.getElementById('ts-name').innerText = response.studentName;
            }
         } else if (response.status === "gatekeeper_locked") {
+          updateStepTracker(1);
           renderNativeForm(response);
         } else if (response.status === "pending") {
+          updateStepTracker(2);
           document.getElementById('pending-area').style.display = 'block';
         } else if (response.status === "found") {
           renderStudentResults(response);
         } else {
+          updateStepTracker(0);
           document.getElementById('error-box').style.display = 'block';
-          document.getElementById('error-box').innerText = response.message || "Unknown Error";
+          var rawMsg = response.message || "Unknown Error";
+          var friendlyMsg = rawMsg;
+          if (rawMsg.indexOf("Server Error") !== -1) friendlyMsg = "Something went wrong on the server. Please try again or contact your teacher.";
+          else if (rawMsg.indexOf("not found") !== -1) friendlyMsg = "This exam could not be found. It may have been renamed or removed.";
+          document.getElementById('error-box').innerHTML = "⚠️ " + friendlyMsg + "<br><span style='font-size:0.8em; color:#999;'>(" + rawMsg + ")</span>";
         }
       }
 
@@ -624,6 +750,7 @@
         var disagVal = parseFloat(response.disagreement);
 
         if (response.uploadComplete) {
+          updateStepTracker(4);
           document.getElementById('corrections-area').style.display = 'none';
           document.getElementById('locked-msg').style.display = 'none';
           document.getElementById('upload-done-msg').style.display = 'block';
@@ -632,13 +759,15 @@
           document.getElementById('celebration-pdf-container').innerHTML = pdfLink;
         } 
         else if (disagVal === 0) {
+          updateStepTracker(3);
           document.getElementById('corrections-area').style.display = 'block';
           document.getElementById('locked-msg').style.display = 'none';
           document.getElementById('upload-done-msg').style.display = 'none';
           document.getElementById('btn-table-update').style.display = 'none';
         } 
         else {
-          // LOCKED MODE
+          // LOCKED MODE — still on step 2, comparing marks
+          updateStepTracker(2);
           isLocked = true;
           document.getElementById('corrections-area').style.display = 'none';
           document.getElementById('upload-done-msg').style.display = 'none';
