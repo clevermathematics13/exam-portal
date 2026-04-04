@@ -228,7 +228,8 @@ function getStudentData(examSheetId, studentEmail) {
       return {
         status: "found",
         examName: examName,
-        examId: examSheetId, 
+        examId: examSheetId,
+        studentEmail: studentEmail,
         results: results,
         uploadedPdf: isDone ? pdfLink : "", 
         uploadComplete: isDone,
@@ -325,4 +326,116 @@ function getIdentityInfo() {
   } catch(e) { console.log(e); }
 
   return { email: email, name: name, isTeacher: isTeacher };
+}
+
+// ==============================================================================
+// 🔑 TEACHER OVERRIDE — Password-protected, short-lived token-based auth
+// ==============================================================================
+
+/**
+ * One-time setup: run this from the Apps Script editor to set the override password.
+ * e.g. setTeacherOverridePassword("your-secret-password")
+ */
+function setTeacherOverridePassword(newPassword) {
+  var email = Session.getActiveUser().getEmail().toLowerCase().trim();
+  if (!CONFIG.TEACHERS.some(function(t) { return t.toLowerCase().trim() === email; })) {
+    throw new Error("Access denied: only teachers can set the override password.");
+  }
+  if (!newPassword || newPassword.length < 8) throw new Error("Password must be at least 8 characters.");
+  PropertiesService.getScriptProperties().setProperty("OVERRIDE_PASSWORD", newPassword);
+  return { success: true };
+}
+
+/**
+ * Validates the override password. Returns a short-lived server-side token on success.
+ * The token lives in CacheService for 10 minutes and is one-use-only.
+ */
+function verifyOverridePassword(password) {
+  try {
+    var stored = PropertiesService.getScriptProperties().getProperty("OVERRIDE_PASSWORD");
+    if (!stored) return { success: false, error: "Override password not yet configured. Run setTeacherOverridePassword() from the Apps Script editor first." };
+
+    // Constant-time comparison to resist timing attacks
+    var match = (password.length === stored.length);
+    for (var i = 0; i < stored.length; i++) {
+      if ((password[i] || '') !== stored[i]) match = false;
+    }
+
+    if (!match) {
+      Utilities.sleep(800); // Slow down brute-force attempts
+      logToDebugSheet("OVERRIDE FAIL", "Bad password attempt from: " + Session.getActiveUser().getEmail());
+      return { success: false, error: "Incorrect password. This attempt has been logged." };
+    }
+
+    var token = Utilities.getUuid();
+    CacheService.getScriptCache().put("override_" + token, "valid", 600); // 10-min TTL
+    logToDebugSheet("OVERRIDE AUTH", "Teacher override session started.");
+    return { success: true, token: token };
+  } catch(e) {
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * Saves teacher scores for one student on one exam, then revokes the token.
+ * Token-based auth ensures only a verified teacher session can write scores.
+ */
+function saveTeacherOverride(token, examId, studentEmail, scores) {
+  try {
+    var cache = CacheService.getScriptCache();
+    var tokenValid = cache.get("override_" + token);
+    if (!tokenValid) return { success: false, error: "Session expired or invalid. Please re-authenticate." };
+
+    // Revoke immediately — one-time use
+    cache.remove("override_" + token);
+
+    // Fall back to the logged-in user if no email supplied (student's own device)
+    var targetEmail = (studentEmail && studentEmail !== "")
+      ? studentEmail.toLowerCase().trim()
+      : Session.getActiveUser().getEmail().toLowerCase().trim();
+
+    var ss = SpreadsheetApp.openById(DB_ID);
+    var dashSheet = ss.getSheetByName(examId);
+    if (!dashSheet) return { success: false, error: "Dashboard sheet '" + examId + "' not found." };
+
+    var dData = dashSheet.getDataRange().getValues();
+    var targetRow = -1;
+    for (var r = 5; r < dData.length; r++) {
+      if (String(dData[r][0]).toLowerCase().trim() === targetEmail) {
+        targetRow = r + 1; // 1-indexed for sheet API
+        break;
+      }
+    }
+    if (targetRow === -1) return { success: false, error: "Student '" + targetEmail + "' not found in the dashboard." };
+
+    // Write scores into columns C onwards (column 3 in 1-based)
+    var cleanScores = scores.map(function(v) {
+      if (v === '-' || v === null || v === undefined || v === '') return '';
+      var n = parseFloat(v);
+      return isNaN(n) ? '' : n;
+    });
+
+    if (cleanScores.length > 0) {
+      dashSheet.getRange(targetRow, 3, 1, cleanScores.length).setValues([cleanScores]);
+      SpreadsheetApp.flush();
+    }
+
+    logToDebugSheet("OVERRIDE SAVE", "Scores updated for " + targetEmail + " on exam: " + examId);
+    return { success: true };
+  } catch(e) {
+    logToDebugSheet("OVERRIDE ERROR", e.toString());
+    return { success: false, error: e.toString() };
+  }
+}
+
+/**
+ * Immediately revokes an override token (called when teacher clicks DONE or modal closes).
+ */
+function revokeOverrideToken(token) {
+  try {
+    CacheService.getScriptCache().remove("override_" + token);
+    return { success: true };
+  } catch(e) {
+    return { success: false };
+  }
 }

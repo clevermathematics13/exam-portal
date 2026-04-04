@@ -106,6 +106,30 @@
       .btn-reset { background-color: #d32f2f; color: white; padding: 8px 15px; border: none; border-radius: 20px; font-size: 0.9em; margin-top: 15px; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; }
       .btn-reset:hover { opacity: 1; }
 
+      /* TEACHER OVERRIDE MODAL */
+      .override-modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.78); z-index: 2000; overflow-y: auto; }
+      .override-modal-card { background: white; max-width: 580px; width: 90%; margin: 40px auto; border-radius: 14px; padding: 30px; position: relative; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+      .override-close-x { position: absolute; top: 12px; right: 16px; font-size: 1.5em; cursor: pointer; color: #999; background: none; border: none; line-height: 1; }
+      .override-close-x:hover { color: #333; }
+      .override-pw-input { width: 100%; padding: 13px; font-size: 1em; border: 2px solid #ccc; border-radius: 6px; box-sizing: border-box; margin: 10px 0; letter-spacing: 2px; }
+      .override-pw-input:focus { border-color: #0288d1; outline: none; }
+      .override-score-input { width: 72px; padding: 7px; font-size: 1em; border: 2px solid #ddd; border-radius: 5px; text-align: center; font-weight: bold; }
+      .override-score-input:focus { border-color: #f57c00; outline: none; }
+      .btn-override-unlock { background: #0288d1; color: white; border: none; padding: 13px; border-radius: 8px; font-size: 1em; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+      .btn-override-unlock:hover { background: #0277bd; }
+      .btn-override-unlock:disabled { background: #b0bec5; cursor: not-allowed; }
+      .btn-override-done { background: #2e7d32; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; letter-spacing: 0.5px; }
+      .btn-override-done:hover { background: #1b5e20; }
+      .btn-override-done:disabled { background: #b0bec5; cursor: not-allowed; }
+      .override-timer-bar { background: #fff3e0; border: 1px solid #ffcc80; border-radius: 6px; padding: 9px 14px; margin: 12px 0; font-size: 0.9em; color: #e65100; display: flex; align-items: center; gap: 8px; }
+      .override-timer-bar.urgent { background: #ffebee; border-color: #ef9a9a; color: #c62828; animation: pulse 1s infinite; }
+      @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+      .override-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95em; }
+      .override-table th { background: #2c3e50; color: white; padding: 9px 12px; text-align: left; }
+      .override-table td { border-bottom: 1px solid #eee; padding: 8px 12px; vertical-align: middle; }
+      .btn-override-trigger { display: block; width: fit-content; margin: 22px auto 0 auto; background: none; border: 1px dashed #90a4ae; color: #90a4ae; padding: 7px 18px; border-radius: 20px; font-size: 0.85em; cursor: pointer; transition: all 0.2s; }
+      .btn-override-trigger:hover { background: #eceff1; color: #546e7a; border-color: #546e7a; border-style: solid; }
+
       /* HOW IT WORKS GUIDE */
       .guide-toggle { 
         display: inline-block; cursor: pointer; color: #546e7a; font-size: 0.9em; 
@@ -179,7 +203,12 @@
         </div>
         <div class="guide-step">
           <span class="guide-num">2</span>
-          <span class="guide-text"><strong>Compare</strong> — Once Clev has graded, come back to see a side-by-side comparison. Your <strong>Judgement Disagreement %</strong> shows how closely your self-assessment matched. Update your marks until disagreement is <strong>0%</strong>.</span>
+          <span class="guide-text"><strong>Compare</strong> — Once Clev has graded, come back to see a side-by-side comparison. Your <strong>Judgement Disagreement %</strong> shows how closely your self-assessment matched. To reach 0%, there are exactly two ways this can happen:
+            <br><br>
+            <strong>① You gave yourself too many marks.</strong> Check the mark scheme, accept that Clev was right, and lower your "You Said" score to match his mark.
+            <br><br>
+            <strong>② Clev gave you too few marks.</strong> Check the mark scheme and find clear evidence that your answer deserves more credit than Clev awarded. <em>You must bring both your original exam paper and the mark scheme to Clev in person.</em> Do not simply raise your "You Said" mark without the evidence — Clev will check. If he agrees with your evidence, he will use the <strong>Teacher Override</strong> on this page to correct his score on the spot.
+          </span>
         </div>
         <div class="guide-step">
           <span class="guide-num">3</span>
@@ -281,6 +310,9 @@
         <button id="btn-table-update" class="btn-update-table" style="display:none;" onclick="submitTableEdits()">
            🔄 Update & Recalculate
         </button>
+        <button class="btn-override-trigger" id="btn-override-trigger" onclick="openOverrideModal()" style="display:none;">
+          🔑 Teacher: Adjust My Scores
+        </button>
       </div>
 
       <div id="gatekeeper-area" style="display:none; margin-top:30px;">
@@ -302,6 +334,44 @@
       </div>
 
       <div id="error-box" style="display:none; margin-top:20px; background:#fff3e0; color:#e65100; padding:20px; border-radius:8px; border:1px solid #ffcc80;"></div>
+    </div>
+
+    <!-- TEACHER OVERRIDE MODAL -->
+    <div id="override-modal" class="override-modal-bg">
+      <div class="override-modal-card">
+        <button class="override-close-x" onclick="closeOverrideModal()" title="Cancel">✕</button>
+
+        <!-- Screen 1: Password -->
+        <div id="override-auth-screen">
+          <h2 style="margin-top:0; color:#1a237e;">🔑 Teacher Score Override</h2>
+          <p style="color:#555; margin-bottom:5px;">Enter the teacher password to adjust scores for this exam. This session will expire automatically in <strong>5 minutes</strong>.</p>
+          <input type="password" id="override-password-input" class="override-pw-input"
+                 placeholder="Enter teacher password..."
+                 onkeydown="if(event.key==='Enter') submitOverridePassword()">
+          <button class="btn-override-unlock" onclick="submitOverridePassword()">🔓 Unlock</button>
+          <div id="override-auth-error" style="color:#c62828; margin-top:10px; display:none; font-weight:bold; padding:8px; background:#ffebee; border-radius:5px;"></div>
+          <div style="margin-top:18px; padding:12px 15px; background:#f5f5f5; border-radius:8px; font-size:0.8em; color:#666; text-align:left; line-height:1.6;">
+            🔒 <strong>Security:</strong> Your password is validated on Google's servers and is <em>never stored in this browser</em>. Failed attempts are logged. The safest option is to make adjustments from your own device (teacher view, student dropdown) — this override exists for when you are already sitting with the student.
+          </div>
+        </div>
+
+        <!-- Screen 2: Score editing -->
+        <div id="override-edit-screen" style="display:none;">
+          <h2 style="margin-top:0; color:#1a237e;">✏️ Adjust Teacher Scores</h2>
+          <p id="override-context" style="color:#555; margin:0 0 5px 0; font-size:0.9em;"></p>
+          <div id="override-timer-bar" class="override-timer-bar">
+            ⏱ Session expires in: <strong id="override-timer-val">5:00</strong> — click DONE when finished.
+          </div>
+          <div style="overflow-y:auto; max-height:42vh;">
+            <table class="override-table">
+              <thead><tr><th>Question</th><th>Max</th><th>Clev's Score</th></tr></thead>
+              <tbody id="override-score-body"></tbody>
+            </table>
+          </div>
+          <button class="btn-override-done" onclick="submitOverrideDone()">✅ DONE — Save &amp; Log Out</button>
+          <p style="font-size:0.78em; color:#999; text-align:center; margin:8px 0 0 0;">Clicking DONE immediately ends this teacher session and returns to the student's view.</p>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -734,9 +804,149 @@
         });
       }
 
+      // ============================================================
+      // TEACHER OVERRIDE LOGIC
+      // ============================================================
+      var overrideToken = null;
+      var overrideTimerInterval = null;
+      var overrideSecondsLeft = 300;
+
+      function openOverrideModal() {
+        overrideToken = null;
+        document.getElementById('override-modal').style.display = 'block';
+        document.getElementById('override-auth-screen').style.display = 'block';
+        document.getElementById('override-edit-screen').style.display = 'none';
+        document.getElementById('override-auth-error').style.display = 'none';
+        document.getElementById('override-password-input').value = '';
+        setTimeout(function() { document.getElementById('override-password-input').focus(); }, 150);
+      }
+
+      function closeOverrideModal() {
+        document.getElementById('override-modal').style.display = 'none';
+        document.getElementById('override-password-input').value = '';
+        clearInterval(overrideTimerInterval);
+        if (overrideToken) {
+          var t = overrideToken;
+          overrideToken = null;
+          google.script.run.revokeOverrideToken(t);
+        }
+      }
+
+      function submitOverridePassword() {
+        var pw = document.getElementById('override-password-input').value;
+        if (!pw) {
+          document.getElementById('override-auth-error').style.display = 'block';
+          document.getElementById('override-auth-error').innerText = 'Please enter the password.';
+          return;
+        }
+        var btn = document.querySelector('.btn-override-unlock');
+        btn.disabled = true;
+        btn.innerText = 'Verifying...';
+        document.getElementById('override-auth-error').style.display = 'none';
+        // Copy then immediately wipe the field so it is not visible longer than needed
+        var pwCopy = pw;
+        document.getElementById('override-password-input').value = '';
+        google.script.run
+          .withSuccessHandler(function(res) {
+            btn.disabled = false;
+            btn.innerText = '🔓 Unlock';
+            if (res.success) {
+              overrideToken = res.token;
+              showOverrideEditScreen();
+            } else {
+              document.getElementById('override-auth-error').style.display = 'block';
+              document.getElementById('override-auth-error').innerText = '❌ ' + res.error;
+            }
+          })
+          .withFailureHandler(function(err) {
+            btn.disabled = false;
+            btn.innerText = '🔓 Unlock';
+            document.getElementById('override-auth-error').style.display = 'block';
+            document.getElementById('override-auth-error').innerText = '❌ Server error: ' + err.message;
+          })
+          .verifyOverridePassword(pwCopy);
+      }
+
+      function showOverrideEditScreen() {
+        document.getElementById('override-auth-screen').style.display = 'none';
+        document.getElementById('override-edit-screen').style.display = 'block';
+        if (lastResponseData) {
+          var examLabel = lastResponseData.examName || currentExamId;
+          var studentLabel = lastResponseData.studentEmail || document.getElementById('student-selector').value || 'this student';
+          document.getElementById('override-context').innerText = 'Exam: ' + examLabel + '  |  Student: ' + studentLabel;
+          var tbody = document.getElementById('override-score-body');
+          tbody.innerHTML = '';
+          (lastResponseData.results || []).forEach(function(item, i) {
+            var tVal = (item.teacherScore === '-' || item.teacherScore === null || item.teacherScore === undefined) ? '' : item.teacherScore;
+            var row = tbody.insertRow();
+            row.innerHTML = '<td style="font-weight:bold;">' + item.question + '</td>' +
+                            '<td style="color:#999;">/' + item.max + '</td>' +
+                            '<td><input type="number" class="override-score-input" id="override-input-' + i + '" ' +
+                            'value="' + tVal + '" min="0" max="' + item.max + '"></td>';
+          });
+        }
+        // 5-minute countdown
+        overrideSecondsLeft = 300;
+        clearInterval(overrideTimerInterval);
+        var timerBar = document.getElementById('override-timer-bar');
+        overrideTimerInterval = setInterval(function() {
+          overrideSecondsLeft--;
+          var m = Math.floor(overrideSecondsLeft / 60);
+          var s = overrideSecondsLeft % 60;
+          document.getElementById('override-timer-val').innerText = m + ':' + (s < 10 ? '0' : '') + s;
+          timerBar.className = (overrideSecondsLeft <= 60) ? 'override-timer-bar urgent' : 'override-timer-bar';
+          if (overrideSecondsLeft <= 0) {
+            clearInterval(overrideTimerInterval);
+            overrideToken = null;
+            document.getElementById('override-modal').style.display = 'none';
+            alert('Teacher session expired. Please re-open the override if you still need to make changes.');
+            loadExam();
+          }
+        }, 1000);
+      }
+
+      function submitOverrideDone() {
+        var numQ = (lastResponseData && lastResponseData.results) ? lastResponseData.results.length : 0;
+        var scores = [];
+        for (var i = 0; i < numQ; i++) {
+          var inp = document.getElementById('override-input-' + i);
+          var v = inp ? inp.value : '';
+          scores.push(v === '' ? '-' : (isNaN(parseFloat(v)) ? '-' : parseFloat(v)));
+        }
+        var tokenCopy = overrideToken;
+        var examIdCopy = currentExamId;
+        var studentEmailCopy = (lastResponseData && lastResponseData.studentEmail)
+          ? lastResponseData.studentEmail
+          : (document.getElementById('student-selector').value || '');
+        var btn = document.querySelector('.btn-override-done');
+        btn.disabled = true;
+        btn.innerText = 'Saving...';
+        // Wipe token from memory before the async call completes
+        overrideToken = null;
+        clearInterval(overrideTimerInterval);
+        google.script.run
+          .withSuccessHandler(function(res) {
+            document.getElementById('override-modal').style.display = 'none';
+            if (res.success) {
+              loadExam();
+            } else {
+              alert('Error saving scores: ' + res.error);
+              btn.disabled = false;
+              btn.innerText = '✅ DONE — Save & Log Out';
+            }
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById('override-modal').style.display = 'none';
+            alert('Server error: ' + err.message);
+          })
+          .saveTeacherOverride(tokenCopy, examIdCopy, studentEmailCopy, scores);
+      }
+
       function renderStudentResults(response) {
         document.getElementById('results-area').style.display = 'block';
         document.getElementById('exam-display-title').innerText = response.examName;
+        // Show override trigger for all student result views
+        document.getElementById('btn-override-trigger').style.display = 'block';
         
         if (response.isImpersonating) {
            var banner = document.getElementById('impersonation-msg');
