@@ -194,27 +194,53 @@
 
       <!-- HOW IT WORKS GUIDE -->
       <span class="guide-toggle" onclick="toggleGuide()">❓ How does this work?</span>
-      <div id="guide-panel" class="guide-panel">
+      <div id="guide-panel" class="guide-panel open">
         <h3>📋 The Reflection Process</h3>
-        <p style="color:#555; margin-top:0;">This tool helps you reflect on your exam performance in 3 steps:</p>
+        <p style="color:#555; margin-top:0;">This tool guides you through a structured self-reflection process in 3 steps. Read all of the following carefully before you begin.</p>
+
         <div class="guide-step">
           <span class="guide-num">1</span>
-          <span class="guide-text"><strong>Self-Grade</strong> — Select an exam below and enter the marks you think you earned for each question. Be honest!</span>
+          <span class="guide-text"><strong>Self-Grade</strong> — Select an exam from the dropdown below and enter the marks you believe you earned for each question. You must be honest and accurate — refer to the mark scheme if you have it. Do not guess, and do not enter marks that are higher than what you genuinely believe you earned.</span>
         </div>
+
         <div class="guide-step">
           <span class="guide-num">2</span>
-          <span class="guide-text"><strong>Compare</strong> — Once Clev has graded, come back to see a side-by-side comparison. Your <strong>Judgement Disagreement %</strong> shows how closely your self-assessment matched. To reach 0%, there are exactly two ways this can happen:
-            <br><br>
-            <strong>① You gave yourself too many marks.</strong> Check the mark scheme, accept that Clev was right, and lower your "You Said" score to match his mark.
-            <br><br>
-            <strong>② Clev gave you too few marks.</strong> Check the mark scheme and find clear evidence that your answer deserves more credit than Clev awarded. <em>You must bring both your original exam paper and the mark scheme to Clev in person.</em> Do not simply raise your "You Said" mark without the evidence — Clev will check. If he agrees with your evidence, he will use the <strong>Teacher Override</strong> on this page to correct his score on the spot.
+          <span class="guide-text"><strong>Compare &amp; Resolve</strong> — Once Clev has entered his marks, return to this page to see a side-by-side comparison. Your <strong>Judgement Disagreement %</strong> measures the gap between what you said you earned and what Clev awarded. You must bring this disagreement to <strong>exactly 0%</strong> before you are permitted to upload corrected work.
+
+            <div style="margin-top:14px; background:#fff8e1; border-left:4px solid #f9a825; padding:14px 16px; border-radius:0 8px 8px 0; font-size:0.92em; line-height:1.7;">
+              <strong style="color:#e65100; font-size:1em;">⚖️ The Two Permitted Paths to 0%</strong><br><br>
+
+              There are <strong>exactly two</strong> legitimate reasons why a disagreement may exist, and <strong>exactly two</strong> corresponding actions you are permitted to take. No other actions are acceptable.
+
+              <br><br>
+              <strong>PATH A — You Over-Awarded Yourself</strong><br>
+              If, upon consulting the official mark scheme, you conclude that the mark you entered for a question was <em>higher</em> than what the mark scheme supports, you are required to lower your "You Said" score for that question to accurately reflect what the mark scheme awards. This is the most common scenario. You do this yourself by editing the "You Said" column and clicking <strong>Update &amp; Recalculate</strong>.
+
+              <br><br>
+              <strong>PATH B — Clev Under-Awarded You</strong><br>
+              If, upon consulting the official mark scheme, you have a genuine and evidenced belief that Clev's mark for a specific question is <em>lower</em> than what the mark scheme warrants — that is, that your written answer on your exam paper satisfies a marking point that Clev did not credit — you may challenge that mark. However, the following conditions are <strong>non-negotiable and strictly enforced</strong>:
+
+              <ol style="margin:10px 0 0 0; padding-left:20px; line-height:1.9;">
+                <li>You must locate the <strong>specific mark point</strong> in the official mark scheme that you believe your answer satisfies.</li>
+                <li>You must bring <strong>your physical exam paper</strong> to Clev in person so he can read your original handwritten answer.</li>
+                <li>You must bring the <strong>official mark scheme</strong> and point to the exact criterion you are citing.</li>
+                <li>Clev will read both documents and make an independent judgement. His decision is final.</li>
+                <li>If Clev agrees, he will use the <strong>Teacher Override</strong> on this page to correct his score immediately. Your disagreement will update accordingly.</li>
+                <li><strong>You must not raise your own "You Said" mark in anticipation of Clev's agreement.</strong> You may only raise your "You Said" value after Clev has adjusted his score — not before. Doing so constitutes academic dishonesty.</li>
+              </ol>
+
+              <br>
+              <strong style="color:#c62828;">⛔ What you may NOT do:</strong> You may not raise your "You Said" score without Clev's explicit approval. You may not argue verbally without the physical mark scheme and paper present. You may not request a re-mark on the basis of feeling that your work deserved more marks — all challenges must be grounded in a specific, identifiable mark scheme criterion.
+            </div>
           </span>
         </div>
+
         <div class="guide-step">
           <span class="guide-num">3</span>
-          <span class="guide-text"><strong>Upload Corrections</strong> — When disagreement reaches 0%, upload a PDF of your corrected work to complete the process.</span>
+          <span class="guide-text"><strong>Upload Corrected Work</strong> — Once disagreement reaches 0%, the upload form will unlock. You must upload a <strong>single PDF</strong> containing all of your corrected exam work. This is your evidence that you have reviewed your errors, understood the correct answers, and completed the learning cycle.</span>
         </div>
-        <p style="color:#888; font-size:0.85em; margin-bottom:0;">💡 <em>Tip: Click the title "CleverReflection" to reset. Use the 📊 button above to see your overall mastery by syllabus topic.</em></p>
+
+        <p style="color:#888; font-size:0.85em; margin-bottom:0;">💡 <em>Tip: Click the title "CleverReflection" to reset your view. Use the 📊 button above to see your cumulative performance by syllabus topic.</em></p>
       </div>
 
       <!-- STEP PROGRESS TRACKER (hidden until an exam is loaded) -->
@@ -268,11 +294,16 @@
         <h3 id="exam-display-title"></h3>
         
         <div id="locked-msg" class="upload-locked" style="display:none;">
-           🔒 <strong>Upload Locked</strong><br>
-           <span style="font-size:0.95em;">
-             Your Judgement Disagreement must be <strong>0.0%</strong> to unlock the upload form.<br>
-             Please update your marks in the <strong>"You Said"</strong> column below to match Clev's marks (or convince me otherwise!).
-           </span>
+           🔒 <strong>Upload Locked — Judgement Disagreement Must Reach 0%</strong>
+           <div style="margin-top:10px; font-size:0.92em; line-height:1.7;">
+             Your self-awarded marks and Clev's marks do not yet match. The upload form will remain locked until your Judgement Disagreement is exactly <strong>0.0%</strong>.
+             <br><br>
+             You have two — and only two — permitted options:
+             <ol style="margin:8px 0 0 0; padding-left:18px;">
+               <li><strong>Lower your "You Said" mark</strong> for any question where you now accept, after checking the mark scheme, that you over-awarded yourself. Edit the value in the table below and click <strong>Update &amp; Recalculate</strong>.</li>
+               <li><strong>Request a Teacher Override</strong> for any question where you have clear mark-scheme evidence that Clev under-awarded you. You must bring your physical exam paper and the mark scheme to Clev in person. If Clev agrees, he will adjust his score using the override tool on this page. <em>Do not raise your own "You Said" mark without Clev's approval first.</em></li>
+             </ol>
+           </div>
         </div>
 
         <div id="corrections-area" class="upload-section" style="display:none;">
